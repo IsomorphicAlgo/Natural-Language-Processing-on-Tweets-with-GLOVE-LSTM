@@ -1,0 +1,55 @@
+# Add this code to your notebook to load preprocessed data instead of running preprocessing again
+
+import os
+import pandas as pd
+
+# Define paths to preprocessed data files
+train_path = 'processed_data/preprocessed_train.csv'
+test_path = 'processed_data/preprocessed_test.csv'
+
+# Check if preprocessed files exist
+if os.path.exists(train_path) and os.path.exists(test_path):
+    # Load preprocessed data
+    print(f"Loading preprocessed training data from {train_path}...")
+    train_data_frame = pd.read_csv(train_path)
+    print(f"Loaded {len(train_data_frame)} preprocessed training samples.")
+    
+    print(f"Loading preprocessed test data from {test_path}...")
+    test_data_frame = pd.read_csv(test_path)
+    print(f"Loaded {len(test_data_frame)} preprocessed test samples.")
+    
+    print("Preprocessed data loaded successfully!")
+else:
+    print("Preprocessed data files not found. Running preprocessing steps...")
+    
+    # Here you would keep your original preprocessing code
+    # Download required NLTK data
+    nltk.download('punkt_tab')
+    train_data_frame['clean_text']=train_data_frame['text'].apply(lambda x: remove_emoji(x))
+    
+    # remove stopwords  
+    train_data_frame['clean_text']=train_data_frame['clean_text'].apply(lambda x: preprocess_data(x))
+    
+    # remove extra whitespace
+    train_data_frame['clean_text']=train_data_frame['clean_text'].apply(lambda x: re.sub(r'\s+', ' ', x))
+    
+    # Spellcheck
+    train_data_frame['clean_text'] = train_data_frame['clean_text'].apply(correct_spelling)
+    
+    # Same for test data
+    test_data_frame['clean_text']=test_data_frame['text'].apply(lambda x: remove_emoji(x))
+    test_data_frame['clean_text']=test_data_frame['clean_text'].apply(lambda x: preprocess_data(x))
+    test_data_frame['clean_text']=test_data_frame['clean_text'].apply(lambda x: re.sub(r'\s+', ' ', x))
+    test_data_frame['clean_text'] = test_data_frame['clean_text'].apply(correct_spelling)
+    
+    # Create directory if it doesn't exist
+    os.makedirs('processed_data', exist_ok=True)
+    
+    # Save the preprocessed data for future use
+    train_data_frame.to_csv(train_path, index=False)
+    print(f"Preprocessed training data saved to {train_path}")
+    
+    test_data_frame.to_csv(test_path, index=False)
+    print(f"Preprocessed test data saved to {test_path}")
+
+# Now you can continue with your analysis using train_data_frame and test_data_frame 
